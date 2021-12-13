@@ -1,5 +1,5 @@
 import time
-import datetime
+import datetime as datetime
 import pandas as pd
 import numpy as np
 import re
@@ -24,10 +24,23 @@ print('-------------------------Start: Answer 1.a ------------------------------
 #     Securities.csv : This has details like Company name, Headquarter address, Inception Date and their Sector and Industry Classification
 
 
+def RemoveNull_StringtoDate(Date):
+    Date1 = pd.to_datetime(Date)
+    Year1 = pd.DatetimeIndex(Date1).year
+    Date1 = np.where(Date.isnull(),"0", Date)
+    return(Date1,Year1)
+
+def tofloat(Values):
+    Values1 = Values.astype(float)
+    return Values1
+
+
+
 # Answer 2.a Importing Data : Your project should make use of one or more of the following: Relational
 # database, API or web scraping (10)
 
 # For my solution I am using a API method and fetching historical data for AMZN from Alphavantage with Key
+
 print('-------------------------Start: Answer 2.a, Answer 4.c.---------------------------------------------------------------')
 
 data= requests.get('https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=AMZN&outputsize=full&apikey=9AZIN6Q78VVQXW5H')
@@ -60,7 +73,7 @@ df_DailyData.rename(columns={'index': 'Date',
                        '5. volume': 'volume'}, inplace=True)
 
 # Removing the trailing H:M:S from a datetime object and converting it into string
-df_DailyData['Date'] = pd.to_datetime(df_DailyData['Date'])
+df_DailyData['Date'],Year2 = RemoveNull_StringtoDate(df_DailyData['Date'])
 
 # All the numeric data is converted from Object to Float
 df_DailyData['open']= df_DailyData['open'].astype(float)
@@ -68,7 +81,6 @@ df_DailyData['high']= df_DailyData['high'].astype(float)
 df_DailyData['low']= df_DailyData['low'].astype(float)
 df_DailyData['close']=df_DailyData['close'].astype(float)
 df_DailyData['volume']=df_DailyData['volume'].astype(float)
-print(df_DailyData['Date'][10])
 print(df_DailyData.head())
 df_DailyData.info()
 print(df_DailyData.shape)
@@ -80,6 +92,7 @@ df_DailyData = df_DailyData.set_index('Date') #Setting the Date as Index
 mpl.plot(df_DailyData['2021-06-01':], type='candle', title = 'AMAZON Daily Chart',mav=(20), volume= True, style= 'yahoo')
 
 print('-------------------------End: Answer 2.a, Answer 4.c.---------------------------------------------------------------')
+
 
 print('-------------------------Start:Answer 2.b ---------------------------------------------------------------------------')
 
@@ -130,15 +143,25 @@ print(df_merged.notnull().count())
 print('-------------------------End:Answer 3.d -------------------------------------------------------------------------')
 
 
-print('-------------------------Start:Answer 3.b, Answer 4.b --------------------------------------------------------------')
+print('-------------------------Start:Answer 3.b, Answer 4.b, Answer 6.a Part I---------------------------------------------')
 
 # Answer 3.b Analysing data - Replace missing values or drop duplicates (10)
 # Answer 4.b Python - Numpy(10)
+
 # Inception date has the least count of all the columns (377) hence using iterations to fill them as 'Not Defined'
-df_Securities['Inception Date'] = np.where(df_Securities['Inception Date'].isnull(), 'Not Defined', df_Securities['Inception Date'])
+df_Securities.info()
+#df_Securities['Inception Date'] = np.where(df_Securities['Inception Date'].isnull(), 0, df_Securities['Inception Date'])
+df_Securities['Inception Date'], Year3 = RemoveNull_StringtoDate(df_Securities['Inception Date'])
 
 # Count of Inception Date now shows 505 as other fields
 df_Securities.info()
+print(df_Securities['Inception Date'])
+
+print(df_Securities['Inception Date'].dtypes)
+
+
+# Answer 6.a Part I : Visualize the count of companies in respective years
+#Date = StringtoDate(df_Securities['Inception Date'])
 
 print('-------------------------End:Answer 3.b, Answer 4.b --------------------------------------------------------------')
 
