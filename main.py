@@ -7,8 +7,7 @@ import requests
 import mplfinance as mpl
 import matplotlib.pyplot as plt
 from mplfinance.original_flavor import candlestick_ohlc
-#from mplfinance import candlestick_ohlc
-import matplotlib.dates as mpdates
+# from mplfinance import candlestick_ohlc
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import classification_report
@@ -20,90 +19,85 @@ print('-------------------------Start: Answer 1.a ------------------------------
 #Answer 1 Real-world scenario: The project should use a real-world dataset and include a reference of their source in the report (10)
 # Working with S&P 500 companies historical prices and fundamental data. https://www.kaggle.com/dgawlik/nyse
 # Dataset used are
+#     Alphavantage for fetching real time Stock data: https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=AMZN&outputsize=full&apikey=9AZIN6Q78VVQXW5H
 #     prices.csv : This has historical prices for over 500 companies ranging from 4th Jan 2010 - 31st Dec 2016
 #     Securities.csv : This has details like Company name, Headquarter address, Inception Date and their Sector and Industry Classification
 
 
-def RemoveNull_StringtoDate(Date):
+# Function to fetch latest price and plot graphs for each stock list passed
+def Latest_StockPrices(Stock_List):
+   for i in Stock_List:
+       print(i)
+       urlPart1 = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol='
+       urlPart2 = '{}&outputsize=full&apikey=9AZIN6Q78VVQXW5H'.format(i)
+       url = urlPart1 + urlPart2
+       print(url)
+       data = requests.get(url)
+       print(data)
+       # Converting the data into a Dictionary which has two keys 'Meta' and 'Time Series (Daily)'
+       dict1 = data.json()
+       print(type(dict1))
+       #print(dict1.keys())
+       dict2 = dict1['Time Series (Daily)']
+       #print(type(dict2))
+       df_API = pd.DataFrame.from_dict(dict2)
+       # Transpose the data frame to have dates as rows and other fields as columns
+       df_API_T = df_API.transpose()
+       df_DailyData = df_API_T.reset_index()
+       df_DailyData.rename(columns={'index': 'Date',
+                                    '1. open': 'open', '2. high': 'high',
+                                    '3. low': 'low', '4. close': 'close',
+                                    '5. volume': 'volume'}, inplace=True)
+
+       # Removing the trailing H:M:S from a datetime object and converting it into string
+       df_DailyData['Date'] = pd.to_datetime(df_DailyData['Date'])
+
+       # All the numeric data is converted from Object to Float
+       df_DailyData['open'] = df_DailyData['open'].astype(float)
+       df_DailyData['high'] = df_DailyData['high'].astype(float)
+       df_DailyData['low'] = df_DailyData['low'].astype(float)
+       df_DailyData['close'] = df_DailyData['close'].astype(float)
+       df_DailyData['volume'] = df_DailyData['volume'].astype(float)
+
+       # Plotting a candlestick chart with this above data
+       df_DailyData = df_DailyData.set_index('Date')  # Setting the Date as Index
+
+       # Plot a Candlestick chart with Daily moving averages and volumns
+       mpl.plot(df_DailyData['2021-06-01':], type='candle',
+                title='{} Candlestick Chart:Latest Day "Price","Volume"&"Moving Average"'.format(i),
+                mav=(10), volume=True,style='yahoo')
+
+# Function to convert an Object to Datetime and extracting Year of each date
+def DateOperation(Date):
     Date1 = pd.to_datetime(Date)
     Year1 = pd.DatetimeIndex(Date1).year
-    Date1 = np.where(Date.isnull(),"0", Date)
     return(Date1,Year1)
 
 def tofloat(Values):
     Values1 = Values.astype(float)
     return Values1
 
-
-
-# Answer 2.a Importing Data : Your project should make use of one or more of the following: Relational
-# database, API or web scraping (10)
-
-# For my solution I am using a API method and fetching historical data for AMZN from Alphavantage with Key
-
-print('-------------------------Start: Answer 2.a, Answer 4.c.---------------------------------------------------------------')
-
-data= requests.get('https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=AMZN&outputsize=full&apikey=9AZIN6Q78VVQXW5H')
-print(data)
-# Converting the data into a Dictionary which has two keys 'Meta' and 'Time Series (Daily)'
-dict1 = data.json()
-print(type(dict1))
-
+print('-------------------------Start: Answer 2.a, 3.c, 4.a and 4.c.---------------------------------------------------------------')
+# Answer 2.a Importing Data : Your project should make use of one or more of the following: Relational database, API or web scraping (10)
+# Answer 3.c Analysing data : Make use of iterators (10)
+# Answer 4.a Python : Define a custom function to create reusable code (10)
 # Answer 4.c Python : Dictionary or Lists (10)
-# As the above is a nested Dict with "Meta" and "Time Series (Daily)" keys The following is extracting 'Time Series (Daily)'
-# key from the above to a new Dictionary
+# Answer 6 Part I : Visualisation (Ignore all the Future warnings)
 
-dict2 = dict1['Time Series (Daily)']
-print(type(dict2))
+# For my solution I am using a Parameterised Function to call API's of 5 Tech Companies to fetching "Daily" Real time data from
+# Alphavantage with my personal Key and present "Candle stick" chart with "Daily Moving Average" and "Volume" for all the 5 by using a For Loop
 
-# Having operation on Dictionary 2 where converting dict to a data frame
-df_API = pd.DataFrame.from_dict(dict2)
-df_API.info()
-print(df_API.head())
-print(df_API.shape)
+Stock_List = ['AAPL','GOOGL','MSFT','TWTR','AMZN']
 
-# Transpose the data frame to have dates as rows and other fields as columns
-df_API_T = df_API.transpose()
-df_API_T.info()
+Latest_StockPrices(Stock_List) # Calling a parameterized Function and passing a List
 
-df_DailyData = df_API_T.reset_index()
-df_DailyData.rename(columns={'index': 'Date',
-                       '1. open': 'open','2. high': 'high',
-                       '3. low': 'low','4. close': 'close',
-                       '5. volume': 'volume'}, inplace=True)
+print('-------------------------End: Answer 2.a, 3.c, 4.a and 4.c.-------------------------------------------------------------------')
 
-# Removing the trailing H:M:S from a datetime object and converting it into string
-df_DailyData['Date'],Year2 = RemoveNull_StringtoDate(df_DailyData['Date'])
-
-# All the numeric data is converted from Object to Float
-df_DailyData['open']= df_DailyData['open'].astype(float)
-df_DailyData['high']= df_DailyData['high'].astype(float)
-df_DailyData['low']= df_DailyData['low'].astype(float)
-df_DailyData['close']=df_DailyData['close'].astype(float)
-df_DailyData['volume']=df_DailyData['volume'].astype(float)
-print(df_DailyData.head())
-df_DailyData.info()
-print(df_DailyData.shape)
-
-# Plotting a candlestick chart with this above data
-df_DailyData = df_DailyData.set_index('Date') #Setting the Date as Index
-
-# Plot a Candlestick chart with Daily moving averages and volumns
-mpl.plot(df_DailyData['2021-06-01':], type='candle', title = 'AMAZON Daily Chart',mav=(20), volume= True, style= 'yahoo')
-
-print('-------------------------End: Answer 2.a, Answer 4.c.---------------------------------------------------------------')
-
-
-print('-------------------------Start:Answer 2.b ---------------------------------------------------------------------------')
+print('------------------------------------Start:Answer 2.b -------------------------------------------------------------------------')
 
 # Answer 2.b Importing Data - Import a CSV file into a Pandas DataFrame (10)
-# Import S&P500 historical data and details
-
-# Input_path  =
-# Output_path =
-# df_Prices = pd.read_csv(r'C:\Users\BYO\Desktop\UCD Course\Project Work\New York Stock Exchange_S&P 500 companies historical prices with fundamental data\prices.csv')
+# Import S&P500 historical data and validating details for the same
 df_Prices = pd.read_csv('prices.csv')
-# df_Securities = pd.read_csv(r'C:\Users\BYO\Desktop\UCD Course\Project Work\New York Stock Exchange_S&P 500 companies historical prices with fundamental data\securities.csv')
 df_Securities = pd.read_csv('securities.csv')
 
 print("--------------------Prices--------------------------")
@@ -118,60 +112,81 @@ print(df_Securities.shape)
 print(df_Securities.head())
 df_Securities.info()
 
-print('-------------------------End:Answer 2.b ---------------------------------------------------------------------------')
+print('----------------------------------End:Answer 2.b ---------------------------------------------------------------------------')
 
-print('-------------------------Start:Answer 3.d -------------------------------------------------------------------------')
+print('-----------------------------------Start:Answer 3.d -------------------------------------------------------------------------')
+# Answer 3.d Analysing data : Merge DataFrames (10)
+# Merging the Prices and Securities from above data to have complete data of Symbols, their prices and basic details
 
-# Renaming the Ticker symbol to symbol so that Merge action to perform
+# Renaming the Ticker in Securities data to symbol which can act as Primary key to perform "Full Join" on Securities and Prices dataset.
 df_Securities.rename(columns={'Ticker symbol': 'symbol',
                               'Date first added': 'Inception Date',
                               'Security': 'Company Name'},
                      inplace=True)
 
-# Answer 3 d Analysing data -Merging datasets (10)
-# Full Join (Outer Join)
-df_merged = pd.merge(df_Securities, df_Prices, on='symbol', how='outer' )
+df_merged = pd.merge(df_Securities, df_Prices, on='symbol', how='outer')
 df_merged.info()
 print(df_merged.head())
 df_merged = df_merged[['CIK', 'symbol', 'Company Name', 'Address of Headquarters', 'GICS Sector', 'GICS Sub Industry',
                         'Inception Date', 'SEC filings', 'date', 'open', 'close', 'low', 'high',
                         'volume']]
+# Understanding the nuances of Merged data
 df_merged.info()
 print(df_merged.head())
 print(df_merged.notnull().count())
+print('-----------------------------------------End:Answer 3.d -------------------------------------------------------------------------')
 
-print('-------------------------End:Answer 3.d -------------------------------------------------------------------------')
 
-
-print('-------------------------Start:Answer 3.b, Answer 4.b, Answer 6.a Part I---------------------------------------------')
-
+print('----------------------------------Start:Answer 3.b,4.b & 6 Part II -------------------------------------------------------------------')
 # Answer 3.b Analysing data - Replace missing values or drop duplicates (10)
 # Answer 4.b Python - Numpy(10)
+# Answer 6 Part II : Visualize the count of companies based on Inception Date
 
-# Inception date has the least count of all the columns (377) hence using iterations to fill them as 'Not Defined'
+# Analysis on Securities data reveals that Inception date has the least count (377) hence using iterations to fill them as 'Not Defined'
 df_Securities.info()
-#df_Securities['Inception Date'] = np.where(df_Securities['Inception Date'].isnull(), 0, df_Securities['Inception Date'])
-df_Securities['Inception Date'], Year3 = RemoveNull_StringtoDate(df_Securities['Inception Date'])
+Visual1 = []
+Visual1 = list(df_Securities['Inception Date']) # To be used for visualisation
+
+# Using Numpy function Where to validate the value in Numpy and if it is Null then replace the same with "Not Defined"
+df_Securities['Inception Date'] = np.where(df_Securities['Inception Date'].isnull(), 'Not Defined', df_Securities['Inception Date'])
 
 # Count of Inception Date now shows 505 as other fields
 df_Securities.info()
-print(df_Securities['Inception Date'])
 
+# Value Count of each dates Occurrence
+print(df_Securities['Inception Date'].value_counts())
 print(df_Securities['Inception Date'].dtypes)
 
 
-# Answer 6.a Part I : Visualize the count of companies in respective years
-#Date = StringtoDate(df_Securities['Inception Date'])
+# Answer 6.a Part II: Visualize the count of companies based on Inception Date
+Inception_Date, year = DateOperation(Visual1)
+Visual_Year = year.value_counts()
+x = list(Visual_Year.index)
+y = list(Visual_Year)
 
-print('-------------------------End:Answer 3.b, Answer 4.b --------------------------------------------------------------')
+fig, ax = plt.subplots()
+width = 0.75 # the width of the bars
+ind = np.arange(len(y))  # the x locations for the groups
+ax.barh(ind, y, width, color="orange")
+ax.set_yticks(ind+width/2)
+ax.set_yticklabels(x, minor=False)
+for i, v in enumerate(y):
+    ax.text(v + .25, i + .25, str(v), color='orange', fontweight='bold') #add value labels into bar
+plt.title('Launch year vs Count of Companies')
+plt.xlabel('Count of Companies')
+plt.ylabel('Inception Year')
+plt.show()
+
+print('---------------------------------End:Answer 3.b,4.b & 6 Part II--------------------------------------------------------------')
 
 
-print('-------------------------Start:Answer 3.a, 3.c -------------------------------------------------------------------------')
+print('--------------------------------Start:Answer 3.a, 3.c -------------------------------------------------------------------------')
 
 # Answer 3.a Analysing data - Your project should use Regex to extract a pattern in data (10)
 # Answer 3.c Make use of iterators (10)
-# Trying to use Securities data 'Address of Headquarters' and fetch the City for the same
 
+
+# Using Securities data 'Address of Headquarters' and fetch the City for the same
 Regex1 = r"\w+\s?\w*$"
 City = []
 for i in range(len(df_Securities['Address of Headquarters'])):
@@ -182,9 +197,10 @@ df_Securities['City'] = City
 print(df_Securities.head(50))
 df_Securities.info()
 
-print('-------------------------End:Answer 3.a, 3.c -------------------------------------------------------------------------')
+print('--------------------------------End:Answer 3.a, 3.c -------------------------------------------------------------------------')
 
-print('-------------------------Start: Answer 5  -------------------------------------------------------------------------')
+
+print('----------------------------------Start: Answer 5  -------------------------------------------------------------------------')
 # Work with Prices data to use ML - Regression Algo
 # Filtering the Prices dataframe on a particular symbol for AMAZON = AMZN
 selected_symbol = ['AMZN']
@@ -241,11 +257,11 @@ print(reg_all.score(X_test, y_test))
 
 print('-------------------------End: Answer 5  -------------------------------------------------------------------------')
 
-print('-------------------------Start: Answer 6 and Answer 7  -------------------------------------------------------------------------')
-# A graph to show count of Companies in S&P500 and their cities
-df_SecByDate = df_Securities.groupby(['City'],as_index= False)
-print(df_SecByDate.dtypes)
 
+#Visual_City = City.value_counts()
+# A graph to show count of Companies in S&P500 and their cities
+# df_SecByDate = df_Securities.groupby(['City'],as_index= False)
+# print(df_SecByDate.dtypes)
 
 #-----------------------------------------------------------------------------------------
 
