@@ -94,7 +94,7 @@ print('-------------------------Start: Answer 2.a, 3.c, 4.a and 4.c.------------
 
 Stock_List = ['AAPL','GOOGL','MSFT','TWTR','AMZN']
 
-# Latest_StockPrices(Stock_List) # Calling a parameterized Function and passing a List
+Latest_StockPrices(Stock_List) # Calling a parameterized Function and passing a List
 
 print('-------------------------End: Answer 2.a, 3.c, 4.a and 4.c.-------------------------------------------------------------------')
 
