@@ -9,11 +9,16 @@ import matplotlib.pyplot as plt
 from mplfinance.original_flavor import candlestick_ohlc
 # from mplfinance import candlestick_ohlc
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Ridge, Lasso
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import preprocessing
+from plotly.subplots import make_subplots
+
+
 
 print('-------------------------Start: Answer 1.a ----------------------------------------------------------------------------')
 #Answer 1 Real-world scenario: The project should use a real-world dataset and include a reference of their source in the report (10)
@@ -89,7 +94,7 @@ print('-------------------------Start: Answer 2.a, 3.c, 4.a and 4.c.------------
 
 Stock_List = ['AAPL','GOOGL','MSFT','TWTR','AMZN']
 
-Latest_StockPrices(Stock_List) # Calling a parameterized Function and passing a List
+# Latest_StockPrices(Stock_List) # Calling a parameterized Function and passing a List
 
 print('-------------------------End: Answer 2.a, 3.c, 4.a and 4.c.-------------------------------------------------------------------')
 
@@ -154,7 +159,9 @@ df_Securities['Inception Date'] = np.where(df_Securities['Inception Date'].isnul
 df_Securities.info()
 
 # Value Count of each dates Occurrence
-print(df_Securities['Inception Date'].value_counts())
+#df_Securities['Inception Date'].to_csv(r'C:\Users\BYO\Desktop\inception.csv')
+
+print(df_Securities['Inception Date'].value_counts().sort_index())
 print(df_Securities['Inception Date'].dtypes)
 
 
@@ -206,7 +213,10 @@ print('----------------------------------Start: Answer 5  ----------------------
 selected_symbol = ['AMZN']
 df_Prices_AMZN = df_Prices[df_Prices['symbol'].isin(selected_symbol)]
 df_Prices_AMZN.info()
+
 print(df_Prices_AMZN.dtypes)
+
+df_Prices_AMZN['date']=pd.to_datetime(df_Prices_AMZN['date'])
 
 # As machine Algo works only on Numerical data then converting Data which is in string format to float and droping Symbol as the same is a redundent column
 
@@ -220,37 +230,68 @@ print(df_Prices_AMZN.dtypes)
 # df_Prices_AMZN['date'] = df_Prices_AMZN['date'].astype(float)
 # df_Prices_AMZN['date'].apply(lambda x: float(x))
 
-#(df.A).apply(lambda x: float(x))
+
 print(df_Prices_AMZN.dtypes)
 
 # label_encoder object knows how to understand word labels.
 label_encoder = preprocessing.LabelEncoder()
 
-# Encode labels in column 'species'.
+# Encoding Dates to be unique by passing Label_encoder
 df_Prices_AMZN['date'] = label_encoder.fit_transform(df_Prices_AMZN['date'])
 print(df_Prices_AMZN['date'].unique())
 df_Prices_AMZN['date'].apply(lambda x: float(x))
-print(df_Prices_AMZN.dtypes)
+
+df_Prices_AMZN1 = df_Prices_AMZN[['date','open','close','low','high','volume']]
+
+print('---------Test New Name -------------------------')
+print(df_Prices_AMZN1.dtypes)
 
 # Dropping Close as this is the target value and Symbol as this is a string
-X = df_Prices_AMZN.drop(columns=['close', 'symbol'])
-y = df_Prices_AMZN['close'].values
+# X = df_Prices_AMZN1.drop(columns=['close', 'symbol'])
+# y = df_Prices_AMZN['close'].values
 
+X = df_Prices_AMZN1.drop('close', axis=1).values
+y = df_Prices_AMZN1['close'].values
+
+print(type(X))
+print(type(y))
 print(X.shape)
 print(y.shape)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.9, random_state=42)
-# Trying to fit KNN model
-# knn = KNeighborsClassifier(n_neighbors=8)
-# knn.fit(X_train, y_train)
-# y_pred = knn.predict(X_test)
-# print(knn.score(X_test, y_test))
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Using Ridge Regression for Regularize
+ridge = Ridge(alpha=0.2, normalize=True)
+ridge.fit(X_train, y_train)
+ridge_pred = ridge.predict(X_test)
+print("Ridge Score is :", ridge.score(X_test, y_test))
+
+# Using Lasso Regression for Regularize
+lasso = Lasso(alpha=0.2, normalize=True)
+lasso.fit(X_train, y_train)
+lasso_pred = lasso.predict(X_test)
+print('Lasso score is: ',lasso.score(X_test, y_test))
+
+# Using Lasso to identify the Most important predictor for a close price is 'Open' price
+names = df_Prices_AMZN1.drop('close', axis=1).columns
+lasso = Lasso(alpha=0.1)
+lasso_coef = lasso.fit(X, y).coef_
+_ = plt.plot(range(len(names)), lasso_coef)
+_ = plt.xticks(range(len(names)), names, rotation=60)
+_ = plt.ylabel('Coefficients')
+plt.show()
+
 
 # Trying to fit LinearRegression model
 reg_all = LinearRegression()
+cv_results = cross_val_score(reg_all, X, y, cv=5)
+print("Cross Validation for 5 folds :", cv_results)
+print("Mean of 5 cross validation score :",np.mean(cv_results))
+
+#Trying to fetching Cross Validation score
 reg_all.fit(X_train, y_train)
 y_pred = reg_all.predict(X_test)
-print(reg_all.score(X_test, y_test))
+print("Linear Regression score is :",reg_all.score(X_test, y_test))
 
 # print(confusion_matrix(y_test, y_pred))
 # print(classification_report(y_test, y_pred))
