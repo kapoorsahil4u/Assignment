@@ -6,19 +6,12 @@ import re
 import requests
 import mplfinance as mpl
 import matplotlib.pyplot as plt
-from mplfinance.original_flavor import candlestick_ohlc
-# from mplfinance import candlestick_ohlc
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import cross_val_score
-from sklearn.linear_model import LinearRegression
-from sklearn.linear_model import Ridge, Lasso
-from sklearn.metrics import classification_report
-from sklearn.metrics import confusion_matrix
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, LogisticRegression, ElasticNet
 from sklearn import preprocessing
-from plotly.subplots import make_subplots
-
-
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import GridSearchCV
+import seaborn as sns
 
 print('-------------------------Start: Answer 1.a ----------------------------------------------------------------------------')
 #Answer 1 Real-world scenario: The project should use a real-world dataset and include a reference of their source in the report (10)
@@ -78,10 +71,6 @@ def DateOperation(Date):
     Year1 = pd.DatetimeIndex(Date1).year
     return(Date1,Year1)
 
-def tofloat(Values):
-    Values1 = Values.astype(float)
-    return Values1
-
 print('-------------------------Start: Answer 2.a, 3.c, 4.a and 4.c.---------------------------------------------------------------')
 # Answer 2.a Importing Data : Your project should make use of one or more of the following: Relational database, API or web scraping (10)
 # Answer 3.c Analysing data : Make use of iterators (10)
@@ -94,7 +83,7 @@ print('-------------------------Start: Answer 2.a, 3.c, 4.a and 4.c.------------
 
 Stock_List = ['AAPL','GOOGL','MSFT','TWTR','AMZN']
 
-Latest_StockPrices(Stock_List) # Calling a parameterized Function and passing a List
+#Latest_StockPrices(Stock_List) # Calling a parameterized Function and passing a List
 
 print('-------------------------End: Answer 2.a, 3.c, 4.a and 4.c.-------------------------------------------------------------------')
 
@@ -123,7 +112,7 @@ print('-----------------------------------Start:Answer 3.d ---------------------
 # Answer 3.d Analysing data : Merge DataFrames (10)
 # Merging the Prices and Securities from above data to have complete data of Symbols, their prices and basic details
 
-# Renaming the Ticker in Securities data to symbol which can act as Primary key to perform "Full Join" on Securities and Prices dataset.
+# Re-naming the 'Ticker' in Securities data to 'symbol' which acts as Primary key to perform "Full Join" on Securities and Prices dataset.
 df_Securities.rename(columns={'Ticker symbol': 'symbol',
                               'Date first added': 'Inception Date',
                               'Security': 'Company Name'},
@@ -139,6 +128,7 @@ df_merged = df_merged[['CIK', 'symbol', 'Company Name', 'Address of Headquarters
 df_merged.info()
 print(df_merged.head())
 print(df_merged.notnull().count())
+
 print('-----------------------------------------End:Answer 3.d -------------------------------------------------------------------------')
 
 
@@ -147,7 +137,7 @@ print('----------------------------------Start:Answer 3.b,4.b & 6 Part II ------
 # Answer 4.b Python - Numpy(10)
 # Answer 6 Part II : Visualize the count of companies based on Inception Date
 
-# Analysis on Securities data reveals that Inception date has the least count (377) hence using iterations to fill them as 'Not Defined'
+# Answer 3.b,4.b :Analysis on Securities data reveals that Inception date has the least count (377) hence using iterations to fill them as 'Not Defined'
 df_Securities.info()
 Visual1 = []
 Visual1 = list(df_Securities['Inception Date']) # To be used for visualisation
@@ -157,10 +147,6 @@ df_Securities['Inception Date'] = np.where(df_Securities['Inception Date'].isnul
 
 # Count of Inception Date now shows 505 as other fields
 df_Securities.info()
-
-# Value Count of each dates Occurrence
-#df_Securities['Inception Date'].to_csv(r'C:\Users\BYO\Desktop\inception.csv')
-
 print(df_Securities['Inception Date'].value_counts().sort_index())
 print(df_Securities['Inception Date'].dtypes)
 
@@ -203,6 +189,11 @@ df_Securities['City'] = City
 
 print(df_Securities.head(50))
 df_Securities.info()
+print('----------------------------------City Counts--------------------------------------------')
+
+df_City = pd.DataFrame(City)
+#print(df_City.types)
+print(pd.values_count(df_City.values.flatten()))
 
 print('--------------------------------End:Answer 3.a, 3.c -------------------------------------------------------------------------')
 
@@ -214,9 +205,7 @@ selected_symbol = ['AMZN']
 df_Prices_AMZN = df_Prices[df_Prices['symbol'].isin(selected_symbol)]
 df_Prices_AMZN.info()
 
-print(df_Prices_AMZN.dtypes)
-
-df_Prices_AMZN['date']=pd.to_datetime(df_Prices_AMZN['date'])
+df_Prices_AMZN['date']= pd.to_datetime(df_Prices_AMZN['date'])
 
 # As machine Algo works only on Numerical data then converting Data which is in string format to float and droping Symbol as the same is a redundent column
 
@@ -242,38 +231,47 @@ print(df_Prices_AMZN['date'].unique())
 df_Prices_AMZN['date'].apply(lambda x: float(x))
 
 df_Prices_AMZN1 = df_Prices_AMZN[['date','open','close','low','high','volume']]
-
 print('---------Test New Name -------------------------')
-print(df_Prices_AMZN1.dtypes)
+print(df_Prices_AMZN1.head())
 
-# Dropping Close as this is the target value and Symbol as this is a string
-# X = df_Prices_AMZN1.drop(columns=['close', 'symbol'])
-# y = df_Prices_AMZN['close'].values
+print('Printing the Co-Relation Matrix')
+corrmat = df_Prices_AMZN1.corr()
+print(corrmat)
 
-X = df_Prices_AMZN1.drop('close', axis=1).values
-y = df_Prices_AMZN1['close'].values
+# Answer 6.a Part II: Visualize the Correlation Heat map with Seaborn
+top_corr_features = corrmat.index
+plt.figure(figsize=(20,20))
+g = sns.heatmap(df_Prices_AMZN1[top_corr_features].corr(), annot=True, cmap="RdYlGn")
+
+
+#With Co-relation metrics its evident that Volumn is least corelated with any other feature.
+# Hence setting up a ML algo to check for predictions of "Volumn" (Target) with other columns (Feature)
+X = df_Prices_AMZN1.drop('volume', axis=1).values  # Feature
+y = df_Prices_AMZN1['volume'].values  # Target
 
 print(type(X))
 print(type(y))
 print(X.shape)
 print(y.shape)
-
+# Train Test Split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Using Ridge Regression for Regularize
-ridge = Ridge(alpha=0.2, normalize=True)
-ridge.fit(X_train, y_train)
-ridge_pred = ridge.predict(X_test)
-print("Ridge Score is :", ridge.score(X_test, y_test))
 
-# Using Lasso Regression for Regularize
-lasso = Lasso(alpha=0.2, normalize=True)
-lasso.fit(X_train, y_train)
-lasso_pred = lasso.predict(X_test)
-print('Lasso score is: ',lasso.score(X_test, y_test))
+# # Instantiate a Decision Tree classifier: tree
+# tree = DecisionTreeClassifier()
+# tree.fit(X_train, y_train)
+# print("Decision Tree:",tree.score(X_test, y_test))
+#
+#
+# # Instantiate a logistic regression classifier: logreg
+# logreg = LogisticRegression()
+# logreg.fit(X_train, y_train)
+# y_Logreg = logreg.predict(X_test)
+# print("Logistic Regression score is :",logreg.score(X_test, y_test))
+
 
 # Using Lasso to identify the Most important predictor for a close price is 'Open' price
-names = df_Prices_AMZN1.drop('close', axis=1).columns
+names = df_Prices_AMZN1.drop('volume', axis=1).columns
 lasso = Lasso(alpha=0.1)
 lasso_coef = lasso.fit(X, y).coef_
 _ = plt.plot(range(len(names)), lasso_coef)
@@ -282,16 +280,94 @@ _ = plt.ylabel('Coefficients')
 plt.show()
 
 
-# Trying to fit LinearRegression model
-reg_all = LinearRegression()
-cv_results = cross_val_score(reg_all, X, y, cv=5)
-print("Cross Validation for 5 folds :", cv_results)
-print("Mean of 5 cross validation score :",np.mean(cv_results))
+# Using Lasso Regression for Regularize
+lasso = Lasso(alpha=0.1, normalize=True)
+lasso.fit(X_train, y_train)
+lasso_pred = lasso.predict(X_test)
+print('Lasso Regression score is: ',lasso.score(X_test, y_test))
 
-#Trying to fetching Cross Validation score
+
+# Setup the parameters and distributions to sample from: param_dist
+# param_Lasso = {"alpha" : [0.1,0.4,0.7,1],
+#               "fit_intercept": [True, False],
+#               "normalize": [True, False],
+#               "copy_X": [True, False],
+#               # "n_jobs": [1],
+#               # "positive": [True, False]
+#               }
+# find optimal alpha with grid search
+#
+# lassreg = GridSearchCV(lasso, param_Lasso,cv=None)
+#
+# # Fit it to the data
+# lassreg.fit(X,y)
+#
+# # Print the tuned parameters and score
+# print("Tuned Lasso Regression Parameters: {}".format(lassreg.best_params_))
+# print("Best score is {}".format(lassreg.best_score_))
+#----------------------------------------------------------------
+
+alpha = [0.001, 0.01, 0.1, 1]
+param_Lasso1 = dict(alpha=alpha)
+grid_lasso = GridSearchCV(estimator=lasso, param_grid=param_Lasso1, scoring='r2', verbose=1, n_jobs=-1, cv=10)
+grid_Lasso_result = grid_lasso.fit(X_train, y_train)
+
+print('Best Lasso Score grid_Lasso_result: ', grid_Lasso_result.best_score_)
+print('Best Lasso Params grid_Lasso_result: ', grid_Lasso_result.best_params_)
+
+
+
+
+# Using Ridge Regression for Regularize
+ridge = Ridge(alpha=0.1, normalize=True)
+ridge.fit(X_train, y_train)
+ridge_pred = ridge.predict(X_test)
+print("Ridge Regression Score is :", ridge.score(X_test, y_test))
+
+alpha = [0.001, 0.01, 0.1, 1]
+param_grid = dict(alpha=alpha)
+grid = GridSearchCV(estimator=ridge, param_grid=param_grid, scoring='r2', verbose=1, n_jobs=-1, cv=10)
+grid_result = grid.fit(X_train, y_train)
+print('Best Score for Ridge Regression : ', grid_result.best_score_)
+print('Best Params for Ridge Regression: ', grid_result.best_params_)
+
+
+# Trying Linear ElasticNet
+regr =ElasticNet()
+regr.fit(X_train,y_train)
+print('ElasticNet Regression score is :',regr.score(X_test, y_test))
+
+
+#Trying Linear Regression score
+reg_all = LinearRegression()
 reg_all.fit(X_train, y_train)
 y_pred = reg_all.predict(X_test)
 print("Linear Regression score is :",reg_all.score(X_test, y_test))
+
+# Hyper-parameter tuning for Linear Regression
+
+# Setup the parameters and distributions to sample from: param_dist
+param_dist = {"fit_intercept": [True, False],
+              "normalize": [True, False],
+              "copy_X": [True, False],
+              "n_jobs": [1,3,5],
+              "positive": [True, False]
+              }
+
+logreg_cv = GridSearchCV(reg_all, param_dist, cv=None)
+
+# Fit it to the data
+logreg_cv.fit(X_train,y_train)
+
+# Print the tuned parameters and score
+print("Tuned Linear Regression Parameters: {}".format(logreg_cv.best_params_))
+print("Best score is {}".format(logreg_cv.best_score_))
+
+# # Trying Cross Validation model
+# cv_results = cross_val_score(reg_all, X, y, cv=10)
+# print("Cross Validation for 5 folds :", cv_results)
+# print("Mean of 5 cross validation score :",np.mean(cv_results))
+
 
 # print(confusion_matrix(y_test, y_pred))
 # print(classification_report(y_test, y_pred))
