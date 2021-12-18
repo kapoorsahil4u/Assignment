@@ -189,11 +189,11 @@ df_Securities['City'] = City
 
 print(df_Securities.head(50))
 df_Securities.info()
-print('----------------------------------City Counts--------------------------------------------')
 
-df_City = pd.DataFrame(City)
-#print(df_City.types)
-print(pd.values_count(df_City.values.flatten()))
+# print('----------------------------------City Counts--------------------------------------------')
+# df_City = pd.DataFrame(City)
+# #print(df_City.types)
+# print(pd.values_count(df_City.values.flatten()))
 
 print('--------------------------------End:Answer 3.a, 3.c -------------------------------------------------------------------------')
 
@@ -256,7 +256,6 @@ print(y.shape)
 # Train Test Split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-
 # # Instantiate a Decision Tree classifier: tree
 # tree = DecisionTreeClassifier()
 # tree.fit(X_train, y_train)
@@ -268,7 +267,6 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 # logreg.fit(X_train, y_train)
 # y_Logreg = logreg.predict(X_test)
 # print("Logistic Regression score is :",logreg.score(X_test, y_test))
-
 
 # Using Lasso to identify the Most important predictor for a close price is 'Open' price
 names = df_Prices_AMZN1.drop('volume', axis=1).columns
@@ -307,14 +305,15 @@ print('Lasso Regression score is: ',lasso.score(X_test, y_test))
 # print("Best score is {}".format(lassreg.best_score_))
 #----------------------------------------------------------------
 
+
+# Hyperparameter tuning for Lasso Regression
 alpha = [0.001, 0.01, 0.1, 1]
 param_Lasso1 = dict(alpha=alpha)
 grid_lasso = GridSearchCV(estimator=lasso, param_grid=param_Lasso1, scoring='r2', verbose=1, n_jobs=-1, cv=10)
 grid_Lasso_result = grid_lasso.fit(X_train, y_train)
 
-print('Best Lasso Score grid_Lasso_result: ', grid_Lasso_result.best_score_)
 print('Best Lasso Params grid_Lasso_result: ', grid_Lasso_result.best_params_)
-
+print('Best Lasso Score grid_Lasso_result: ', grid_Lasso_result.best_score_)
 
 
 
@@ -324,12 +323,14 @@ ridge.fit(X_train, y_train)
 ridge_pred = ridge.predict(X_test)
 print("Ridge Regression Score is :", ridge.score(X_test, y_test))
 
+
+# Hyperparameter tuning for Ridge Regression
 alpha = [0.001, 0.01, 0.1, 1]
 param_grid = dict(alpha=alpha)
 grid = GridSearchCV(estimator=ridge, param_grid=param_grid, scoring='r2', verbose=1, n_jobs=-1, cv=10)
 grid_result = grid.fit(X_train, y_train)
-print('Best Score for Ridge Regression : ', grid_result.best_score_)
 print('Best Params for Ridge Regression: ', grid_result.best_params_)
+print('Best Score for Ridge Regression : ', grid_result.best_score_)
 
 
 # Trying Linear ElasticNet
@@ -345,7 +346,6 @@ y_pred = reg_all.predict(X_test)
 print("Linear Regression score is :",reg_all.score(X_test, y_test))
 
 # Hyper-parameter tuning for Linear Regression
-
 # Setup the parameters and distributions to sample from: param_dist
 param_dist = {"fit_intercept": [True, False],
               "normalize": [True, False],
@@ -353,21 +353,14 @@ param_dist = {"fit_intercept": [True, False],
               "n_jobs": [1,3,5],
               "positive": [True, False]
               }
-
 logreg_cv = GridSearchCV(reg_all, param_dist, cv=None)
 
 # Fit it to the data
 logreg_cv.fit(X_train,y_train)
 
 # Print the tuned parameters and score
-print("Tuned Linear Regression Parameters: {}".format(logreg_cv.best_params_))
-print("Best score is {}".format(logreg_cv.best_score_))
-
-# # Trying Cross Validation model
-# cv_results = cross_val_score(reg_all, X, y, cv=10)
-# print("Cross Validation for 5 folds :", cv_results)
-# print("Mean of 5 cross validation score :",np.mean(cv_results))
-
+print("Best Parameters for Linear Regression: ",logreg_cv.best_params_)
+print("Best Score for Linear Regression: ",logreg_cv.best_score_)
 
 # print(confusion_matrix(y_test, y_pred))
 # print(classification_report(y_test, y_pred))
