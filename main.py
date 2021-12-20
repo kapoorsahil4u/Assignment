@@ -1,5 +1,3 @@
-import time
-import datetime as datetime
 import pandas as pd
 import numpy as np
 import re
@@ -9,7 +7,6 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, LogisticRegression, ElasticNet
 from sklearn import preprocessing
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import GridSearchCV
 import seaborn as sns
 
@@ -17,7 +14,7 @@ print('-------------------------Start: Answer 1.a ------------------------------
 #Answer 1 Real-world scenario: The project should use a real-world dataset and include a reference of their source in the report (10)
 # Working with S&P 500 companies historical prices and fundamental data. https://www.kaggle.com/dgawlik/nyse
 # Dataset used are
-#     Alphavantage for fetching real time Stock data: https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=AMZN&outputsize=full&apikey=9AZIN6Q78VVQXW5H
+#     Alphavantage for fetching real time Stock data: https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=AAPL&outputsize=full&apikey=9AZIN6Q78VVQXW5H
 #     prices.csv : This has historical prices for over 500 companies ranging from 4th Jan 2010 - 31st Dec 2016
 #     Securities.csv : This has details like Company name, Headquarter address, Inception Date and their Sector and Industry Classification
 
@@ -81,7 +78,7 @@ print('-------------------------Start: Answer 2.a, 3.c, 4.a and 4.c.------------
 # For my solution I am using a Parameterised Function to call API's of 5 Tech Companies to fetching "Daily" Real time data from
 # Alphavantage with my personal Key and present "Candle stick" chart with "Daily Moving Average" and "Volume" for all the 5 by using a For Loop
 
-Stock_List = ['AAPL','GOOGL','MSFT','TWTR','AMZN']
+Stock_List = ['AAPL','GOOGL','MSFT','TWTR','AAPL']
 
 #Latest_StockPrices(Stock_List) # Calling a parameterized Function and passing a List
 
@@ -152,7 +149,7 @@ print(df_Securities['Inception Date'].dtypes)
 
 
 # Answer 6.a Part II: Visualize the count of companies based on Inception Date
-Inception_Date, year = DateOperation(Visual1)
+Inception_Date, year = DateOperation(Visual1) # Call of a function to covert into Datetime object
 Visual_Year = year.value_counts()
 x = list(Visual_Year.index)
 y = list(Visual_Year)
@@ -165,7 +162,7 @@ ax.set_yticks(ind+width/2)
 ax.set_yticklabels(x, minor=False)
 for i, v in enumerate(y):
     ax.text(v + .25, i + .25, str(v), color='orange', fontweight='bold') #add value labels into bar
-plt.title('Launch year vs Count of Companies')
+plt.title('Inception Year vs Count of Companies')
 plt.xlabel('Count of Companies')
 plt.ylabel('Inception Year')
 plt.show()
@@ -188,66 +185,63 @@ for i in range(len(df_Securities['Address of Headquarters'])):
 df_Securities['City'] = City
 
 print(df_Securities.head(50))
+print(df_Securities['City'])
 df_Securities.info()
 
-# print('----------------------------------City Counts--------------------------------------------')
-# df_City = pd.DataFrame(City)
-# #print(df_City.types)
-# print(pd.values_count(df_City.values.flatten()))
 
 print('--------------------------------End:Answer 3.a, 3.c -------------------------------------------------------------------------')
 
 
 print('----------------------------------Start: Answer 5  -------------------------------------------------------------------------')
 # Work with Prices data to use ML - Regression Algo
-# Filtering the Prices dataframe on a particular symbol for AMAZON = AMZN
-selected_symbol = ['AMZN']
-df_Prices_AMZN = df_Prices[df_Prices['symbol'].isin(selected_symbol)]
-df_Prices_AMZN.info()
+# Filtering the Prices dataframe on a particular symbol for APPLE = AAPL
+selected_symbol = ['AAPL']
+df_Prices_AAPL = df_Prices[df_Prices['symbol'].isin(selected_symbol)]
+df_Prices_AAPL.info()
 
-df_Prices_AMZN['date']= pd.to_datetime(df_Prices_AMZN['date'])
+df_Prices_AAPL['date']= pd.to_datetime(df_Prices_AAPL['date'])
 
 # As machine Algo works only on Numerical data then converting Data which is in string format to float and droping Symbol as the same is a redundent column
 
 # ##try:
-#     df_Prices_AMZN['date'] = pd.to_datetime(df_Prices_AMZN['date'], format='%d-%m-%Y')
+#     df_Prices_AAPL['date'] = pd.to_datetime(df_Prices_AAPL['date'], format='%d-%m-%Y')
 # except Exception as e:
-#     df_Prices_AMZN['date'] = pd.to_datetime(df_Prices_AMZN['date'], format='%Y-%m-%d')
-# print(df_Prices_AMZN.dtypes)
+#     df_Prices_AAPL['date'] = pd.to_datetime(df_Prices_AAPL['date'], format='%Y-%m-%d')
+# print(df_Prices_AAPL.dtypes)
 
-# df_Prices_AMZN['date'] = int(df_Prices_AMZN['date'].strftime())
-# df_Prices_AMZN['date'] = df_Prices_AMZN['date'].astype(float)
-# df_Prices_AMZN['date'].apply(lambda x: float(x))
+# df_Prices_AAPL['date'] = int(df_Prices_AAPL['date'].strftime())
+# df_Prices_AAPL['date'] = df_Prices_AAPL['date'].astype(float)
+# df_Prices_AAPL['date'].apply(lambda x: float(x))
 
 
-print(df_Prices_AMZN.dtypes)
+print(df_Prices_AAPL.dtypes)
 
 # label_encoder object knows how to understand word labels.
 label_encoder = preprocessing.LabelEncoder()
 
 # Encoding Dates to be unique by passing Label_encoder
-df_Prices_AMZN['date'] = label_encoder.fit_transform(df_Prices_AMZN['date'])
-print(df_Prices_AMZN['date'].unique())
-df_Prices_AMZN['date'].apply(lambda x: float(x))
+df_Prices_AAPL['date'] = label_encoder.fit_transform(df_Prices_AAPL['date'])
+print(df_Prices_AAPL['date'].unique())
+df_Prices_AAPL['date'].apply(lambda x: float(x))
 
-df_Prices_AMZN1 = df_Prices_AMZN[['date','open','close','low','high','volume']]
+df_Prices_AAPL1 = df_Prices_AAPL[['date','open','close','low','high','volume']]
 print('---------Test New Name -------------------------')
-print(df_Prices_AMZN1.head())
+print(df_Prices_AAPL1.head())
 
 print('Printing the Co-Relation Matrix')
-corrmat = df_Prices_AMZN1.corr()
+corrmat = df_Prices_AAPL1.corr()
 print(corrmat)
 
 # Answer 6.a Part II: Visualize the Correlation Heat map with Seaborn
 top_corr_features = corrmat.index
 plt.figure(figsize=(20,20))
-g = sns.heatmap(df_Prices_AMZN1[top_corr_features].corr(), annot=True, cmap="RdYlGn")
+g = sns.heatmap(df_Prices_AAPL1[top_corr_features].corr(), annot=True, cmap="RdYlGn")
 
 
 #With Co-relation metrics its evident that Volumn is least corelated with any other feature.
 # Hence setting up a ML algo to check for predictions of "Volumn" (Target) with other columns (Feature)
-X = df_Prices_AMZN1.drop('volume', axis=1).values  # Feature
-y = df_Prices_AMZN1['volume'].values  # Target
+X = df_Prices_AAPL1.drop('volume', axis=1).values  # Feature
+y = df_Prices_AAPL1['volume'].values  # Target
 
 print(type(X))
 print(type(y))
@@ -269,7 +263,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 # print("Logistic Regression score is :",logreg.score(X_test, y_test))
 
 # Using Lasso to identify the Most important predictor for a close price is 'Open' price
-names = df_Prices_AMZN1.drop('volume', axis=1).columns
+names = df_Prices_AAPL1.drop('volume', axis=1).columns
 lasso = Lasso(alpha=0.1)
 lasso_coef = lasso.fit(X, y).coef_
 _ = plt.plot(range(len(names)), lasso_coef)
@@ -368,10 +362,25 @@ print("Best Score for Linear Regression: ",logreg_cv.best_score_)
 print('-------------------------End: Answer 5  -------------------------------------------------------------------------')
 
 
+
+# print('----------------------------------City Counts--------------------------------------------')
+# City1 = []
+# values, counts = np.unique(City, return_counts=True)
+# City1.append([values, counts])
+# df_City = pd.merge(values, counts)
+# df_City.info
+# print(df_City.head())
+
+#df_City = pd.DataFrame(City1, columns=['values','counts'])
+
+# City.value_counts()[:20].plot(kind='barh')
+# print(pd.values_count(df_City.values.flatten()))
+
 #Visual_City = City.value_counts()
 # A graph to show count of Companies in S&P500 and their cities
 # df_SecByDate = df_Securities.groupby(['City'],as_index= False)
 # print(df_SecByDate.dtypes)
+
 
 #-----------------------------------------------------------------------------------------
 
