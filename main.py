@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, LogisticRegression, ElasticNet
 from sklearn import preprocessing
+# from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import GridSearchCV
 import seaborn as sns
 
@@ -17,9 +18,9 @@ print('-------------------------Start: Answer 1.a ------------------------------
 #     Alphavantage for fetching real time Stock data: https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=AAPL&outputsize=full&apikey=9AZIN6Q78VVQXW5H
 #     prices.csv : This has historical prices for over 500 companies ranging from 4th Jan 2010 - 31st Dec 2016
 #     Securities.csv : This has details like Company name, Headquarter address, Inception Date and their Sector and Industry Classification
+print('The Answer is elaborated in Abstract (in the attached document)')
 
-
-# Function to fetch latest price and plot graphs for each stock list passed
+# Function to fetch latest price via API Call and plot graphs for each stock list passed
 def Latest_StockPrices(Stock_List):
    for i in Stock_List:
        print(i)
@@ -47,20 +48,20 @@ def Latest_StockPrices(Stock_List):
        # Removing the trailing H:M:S from a datetime object and converting it into string
        df_DailyData['Date'] = pd.to_datetime(df_DailyData['Date'])
 
-       # All the numeric data is converted from Object to Float
+       # By default All the numeric data is converted from Object to Float
        df_DailyData['open'] = df_DailyData['open'].astype(float)
        df_DailyData['high'] = df_DailyData['high'].astype(float)
        df_DailyData['low'] = df_DailyData['low'].astype(float)
        df_DailyData['close'] = df_DailyData['close'].astype(float)
        df_DailyData['volume'] = df_DailyData['volume'].astype(float)
 
-       # Plotting a candlestick chart with this above data
-       df_DailyData = df_DailyData.set_index('Date')  # Setting the Date as Index
-
        # Plot a Candlestick chart with Daily moving averages and volumns
+       df_DailyData = df_DailyData.set_index('Date')  # Setting the Date as Index
        mpl.plot(df_DailyData['2021-06-01':], type='candle',
                 title='{} Candlestick Chart:Latest Day "Price","Volume"&"Moving Average"'.format(i),
                 mav=(10), volume=True,style='yahoo')
+
+
 
 # Function to convert an Object to Datetime and extracting Year of each date
 def DateOperation(Date):
@@ -78,9 +79,9 @@ print('-------------------------Start: Answer 2.a, 3.c, 4.a and 4.c.------------
 # For my solution I am using a Parameterised Function to call API's of 5 Tech Companies to fetching "Daily" Real time data from
 # Alphavantage with my personal Key and present "Candle stick" chart with "Daily Moving Average" and "Volume" for all the 5 by using a For Loop
 
-Stock_List = ['AAPL','GOOGL','MSFT','TWTR','AAPL']
+Stock_List = ['AAPL','GOOGL','MSFT','TWTR','AMZN']
 
-#Latest_StockPrices(Stock_List) # Calling a parameterized Function and passing a List
+Latest_StockPrices(Stock_List) # Calling a parameterized Function and passing a List
 
 print('-------------------------End: Answer 2.a, 3.c, 4.a and 4.c.-------------------------------------------------------------------')
 
@@ -108,8 +109,8 @@ print('----------------------------------End:Answer 2.b ------------------------
 print('-----------------------------------Start:Answer 3.d -------------------------------------------------------------------------')
 # Answer 3.d Analysing data : Merge DataFrames (10)
 # Merging the Prices and Securities from above data to have complete data of Symbols, their prices and basic details
-
 # Re-naming the 'Ticker' in Securities data to 'symbol' which acts as Primary key to perform "Full Join" on Securities and Prices dataset.
+
 df_Securities.rename(columns={'Ticker symbol': 'symbol',
                               'Date first added': 'Inception Date',
                               'Security': 'Company Name'},
@@ -129,17 +130,19 @@ print(df_merged.notnull().count())
 print('-----------------------------------------End:Answer 3.d -------------------------------------------------------------------------')
 
 
-print('----------------------------------Start:Answer 3.b,4.b & 6 Part II -------------------------------------------------------------------')
+print('----------------------------------Start:Answer 3.b,4.b,6 Part II, 7 -------------------------------------------------------------------')
 # Answer 3.b Analysing data - Replace missing values or drop duplicates (10)
 # Answer 4.b Python - Numpy(10)
 # Answer 6 Part II : Visualize the count of companies based on Inception Date
+# Answer 7 : Generating insight on Visualized Data
+
 
 # Answer 3.b,4.b :Analysis on Securities data reveals that Inception date has the least count (377) hence using iterations to fill them as 'Not Defined'
 df_Securities.info()
 Visual1 = []
 Visual1 = list(df_Securities['Inception Date']) # To be used for visualisation
 
-# Using Numpy function Where to validate the value in Numpy and if it is Null then replace the same with "Not Defined"
+# Using Numpy function "Where" to validate the value in Numpy and if it is Null then replace the same with "Not Defined"
 df_Securities['Inception Date'] = np.where(df_Securities['Inception Date'].isnull(), 'Not Defined', df_Securities['Inception Date'])
 
 # Count of Inception Date now shows 505 as other fields
@@ -149,7 +152,7 @@ print(df_Securities['Inception Date'].dtypes)
 
 
 # Answer 6.a Part II: Visualize the count of companies based on Inception Date
-Inception_Date, year = DateOperation(Visual1) # Call of a function to covert into Datetime object
+Inception_Date, year = DateOperation(Visual1) # Call of a function to covert object into a Datetime object
 Visual_Year = year.value_counts()
 x = list(Visual_Year.index)
 y = list(Visual_Year)
@@ -157,7 +160,7 @@ y = list(Visual_Year)
 fig, ax = plt.subplots()
 width = 0.75 # the width of the bars
 ind = np.arange(len(y))  # the x locations for the groups
-ax.barh(ind, y, width, color="orange")
+ax.barh(ind, y, width, color="green")
 ax.set_yticks(ind+width/2)
 ax.set_yticklabels(x, minor=False)
 for i, v in enumerate(y):
@@ -170,10 +173,10 @@ plt.show()
 print('---------------------------------End:Answer 3.b,4.b & 6 Part II--------------------------------------------------------------')
 
 
-print('--------------------------------Start:Answer 3.a, 3.c -------------------------------------------------------------------------')
-
+print('--------------------------------Start:Answer 3.a, 3.c,7 -------------------------------------------------------------------------')
 # Answer 3.a Analysing data - Your project should use Regex to extract a pattern in data (10)
 # Answer 3.c Make use of iterators (10)
+# Answer 7 : Generating insight
 
 
 # Using Securities data 'Address of Headquarters' and fetch the City for the same
@@ -181,38 +184,34 @@ Regex1 = r"\w+\s?\w*$"
 City = []
 for i in range(len(df_Securities['Address of Headquarters'])):
     S1 = str(df_Securities['Address of Headquarters'][i])
-    City.append(re.findall(Regex1, S1))
+    #print(re.findall(Regex1, S1)[0])
+    if len(re.findall(Regex1, S1)) > 0 :
+        City.append(re.findall(Regex1, S1)[0])
+    else:
+        City.append('N/A')
 df_Securities['City'] = City
-
-print(df_Securities.head(50))
+print(df_Securities.head())
 print(df_Securities['City'])
 df_Securities.info()
 
+print("----------------Count of Cities/States ---------------------------")
+values, counts = np.unique(City, return_counts=True)
+df_City = pd.DataFrame({'City/State':values ,'Count':counts})
+print(df_City)
 
 print('--------------------------------End:Answer 3.a, 3.c -------------------------------------------------------------------------')
 
 
 print('----------------------------------Start: Answer 5  -------------------------------------------------------------------------')
 # Work with Prices data to use ML - Regression Algo
+
 # Filtering the Prices dataframe on a particular symbol for APPLE = AAPL
 selected_symbol = ['AAPL']
 df_Prices_AAPL = df_Prices[df_Prices['symbol'].isin(selected_symbol)]
 df_Prices_AAPL.info()
 
+# The above shows Date column as Object so converting the same into a Datetime object
 df_Prices_AAPL['date']= pd.to_datetime(df_Prices_AAPL['date'])
-
-# As machine Algo works only on Numerical data then converting Data which is in string format to float and droping Symbol as the same is a redundent column
-
-# ##try:
-#     df_Prices_AAPL['date'] = pd.to_datetime(df_Prices_AAPL['date'], format='%d-%m-%Y')
-# except Exception as e:
-#     df_Prices_AAPL['date'] = pd.to_datetime(df_Prices_AAPL['date'], format='%Y-%m-%d')
-# print(df_Prices_AAPL.dtypes)
-
-# df_Prices_AAPL['date'] = int(df_Prices_AAPL['date'].strftime())
-# df_Prices_AAPL['date'] = df_Prices_AAPL['date'].astype(float)
-# df_Prices_AAPL['date'].apply(lambda x: float(x))
-
 
 print(df_Prices_AAPL.dtypes)
 
@@ -224,11 +223,10 @@ df_Prices_AAPL['date'] = label_encoder.fit_transform(df_Prices_AAPL['date'])
 print(df_Prices_AAPL['date'].unique())
 df_Prices_AAPL['date'].apply(lambda x: float(x))
 
+# Setting a new data frame by droping the 'Symbol' column
 df_Prices_AAPL1 = df_Prices_AAPL[['date','open','close','low','high','volume']]
-print('---------Test New Name -------------------------')
-print(df_Prices_AAPL1.head())
 
-print('Printing the Co-Relation Matrix')
+print('----------------Printing the Co-Relation Matrix ---------------------------')
 corrmat = df_Prices_AAPL1.corr()
 print(corrmat)
 
@@ -240,45 +238,105 @@ g = sns.heatmap(df_Prices_AAPL1[top_corr_features].corr(), annot=True, cmap="RdY
 
 #With Co-relation metrics its evident that Volumn is least corelated with any other feature.
 # Hence setting up a ML algo to check for predictions of "Volumn" (Target) with other columns (Feature)
+
+# Initiating Features and target Variables
 X = df_Prices_AAPL1.drop('volume', axis=1).values  # Feature
 y = df_Prices_AAPL1['volume'].values  # Target
 
-print(type(X))
-print(type(y))
-print(X.shape)
-print(y.shape)
-# Train Test Split
+print('---------------------------Data type of X (Feature)----------- :', type(X))
+print('---------------------------Shape of X (Feature)------------- :', X.shape)
+print('---------------------------Data type of y (Target)-------------- :', type(y))
+print('---------------------------Shape of y (Target)------------- :', y.shape)
+
+# Performing Train Test Split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
 # # Instantiate a Decision Tree classifier: tree
 # tree = DecisionTreeClassifier()
 # tree.fit(X_train, y_train)
-# print("Decision Tree:",tree.score(X_test, y_test))
-#
-#
+# print("Decision Tree score is:", tree.score(X_test, y_test))
+
 # # Instantiate a logistic regression classifier: logreg
 # logreg = LogisticRegression()
 # logreg.fit(X_train, y_train)
 # y_Logreg = logreg.predict(X_test)
 # print("Logistic Regression score is :",logreg.score(X_test, y_test))
 
-# Using Lasso to identify the Most important predictor for a close price is 'Open' price
-names = df_Prices_AAPL1.drop('volume', axis=1).columns
-lasso = Lasso(alpha=0.1)
-lasso_coef = lasso.fit(X, y).coef_
-_ = plt.plot(range(len(names)), lasso_coef)
-_ = plt.xticks(range(len(names)), names, rotation=60)
-_ = plt.ylabel('Coefficients')
-plt.show()
 
+# Trying Linear ElasticNet
+regr =ElasticNet()
+regr.fit(X_train,y_train)
+print('ElasticNet Regression score is :',regr.score(X_test, y_test))
 
 # Using Lasso Regression for Regularize
-lasso = Lasso(alpha=0.1, normalize=True)
+lasso = Lasso(alpha=0.1) #, normalize=False)
 lasso.fit(X_train, y_train)
 lasso_pred = lasso.predict(X_test)
-print('Lasso Regression score is: ',lasso.score(X_test, y_test))
+print('Lasso Regression score is: ', lasso.score(X_test, y_test))
+
+# # Using Lasso to identify the Most important predictor of 'Volume'
+# names = df_Prices_AAPL1.drop('volume', axis=1).columns
+# lasso = Lasso(alpha=0.1)
+# lasso_coef = lasso.fit(X, y).coef_
+# _ = plt.plot(range(len(names)), lasso_coef)
+# _ = plt.xticks(range(len(names)), names, rotation=60)
+# _ = plt.ylabel('Coefficients')
+# print('---Show CHart=============================')
+# plt.show()
+
+# Hyperparameter tuning for Lasso Regression
+alpha = [0.001, 0.01, 0.1, 1]
+param_Lasso1 = dict(alpha=alpha)
+grid_lasso = GridSearchCV(estimator=lasso, param_grid=param_Lasso1, scoring='r2', verbose=1, n_jobs=-1, cv=5)
+grid_Lasso_result = grid_lasso.fit(X_train, y_train)
+print('GridSearchCV Identified parameters for Lasso Regression: ', grid_Lasso_result.best_params_)
+print('GridSearchCV Identified Lasso Score: ', grid_Lasso_result.best_score_)
 
 
+# Using Ridge Regression for Regularize
+ridge = Ridge(alpha=0.1) #, normalize=False)
+ridge.fit(X_train, y_train)
+ridge_pred = ridge.predict(X_test)
+print("Ridge Regression Score is :", ridge.score(X_test, y_test))
+
+# Hyperparameter tuning for Ridge Regression
+alpha = [0.001, 0.01, 0.1, 1]
+param_grid = dict(alpha=alpha)
+grid = GridSearchCV(estimator=ridge, param_grid=param_grid, scoring='r2', verbose=1, n_jobs=-1, cv=5)
+grid_result = grid.fit(X_train, y_train)
+print('GridSearchCV Identified parameters for Ridge Regression: ', grid_result.best_params_)
+print('GridSearchCV Identified Ridge Score:', grid_result.best_score_)
+
+
+#Trying Linear Regression score
+reg_all = LinearRegression()
+reg_all.fit(X_train, y_train)
+y_pred = reg_all.predict(X_test)
+print("Linear Regression score is :",reg_all.score(X_test, y_test))
+
+# Hyper-parameter tuning for Linear Regression
+# Setup the parameters and distributions to sample from: param_dist
+param_dist = {"fit_intercept": [True, False],
+              #"normalize": [False],
+              "copy_X": [True, False],
+              "n_jobs": [1,3,5],
+              "positive": [True, False]
+              }
+logreg_cv = GridSearchCV(reg_all, param_dist, cv=None)
+
+# Fit it to the data
+logreg_cv.fit(X_train,y_train)
+
+# Print the tuned parameters and score
+print("GridSearchCV Identified parameters for Linear Regression: ",logreg_cv.best_params_)
+print("GridSearchCV Identified Linear Score: ",logreg_cv.best_score_)
+
+# print(confusion_matrix(y_test, y_pred))
+# print(classification_report(y_test, y_pred))
+
+print('-------------------------End: Answer 5  -------------------------------------------------------------------------')
+
+print('***************************Code Finished*******************************************************')
 # Setup the parameters and distributions to sample from: param_dist
 # param_Lasso = {"alpha" : [0.1,0.4,0.7,1],
 #               "fit_intercept": [True, False],
@@ -298,93 +356,6 @@ print('Lasso Regression score is: ',lasso.score(X_test, y_test))
 # print("Tuned Lasso Regression Parameters: {}".format(lassreg.best_params_))
 # print("Best score is {}".format(lassreg.best_score_))
 #----------------------------------------------------------------
-
-
-# Hyperparameter tuning for Lasso Regression
-alpha = [0.001, 0.01, 0.1, 1]
-param_Lasso1 = dict(alpha=alpha)
-grid_lasso = GridSearchCV(estimator=lasso, param_grid=param_Lasso1, scoring='r2', verbose=1, n_jobs=-1, cv=10)
-grid_Lasso_result = grid_lasso.fit(X_train, y_train)
-
-print('Best Lasso Params grid_Lasso_result: ', grid_Lasso_result.best_params_)
-print('Best Lasso Score grid_Lasso_result: ', grid_Lasso_result.best_score_)
-
-
-
-# Using Ridge Regression for Regularize
-ridge = Ridge(alpha=0.1, normalize=True)
-ridge.fit(X_train, y_train)
-ridge_pred = ridge.predict(X_test)
-print("Ridge Regression Score is :", ridge.score(X_test, y_test))
-
-
-# Hyperparameter tuning for Ridge Regression
-alpha = [0.001, 0.01, 0.1, 1]
-param_grid = dict(alpha=alpha)
-grid = GridSearchCV(estimator=ridge, param_grid=param_grid, scoring='r2', verbose=1, n_jobs=-1, cv=10)
-grid_result = grid.fit(X_train, y_train)
-print('Best Params for Ridge Regression: ', grid_result.best_params_)
-print('Best Score for Ridge Regression : ', grid_result.best_score_)
-
-
-# Trying Linear ElasticNet
-regr =ElasticNet()
-regr.fit(X_train,y_train)
-print('ElasticNet Regression score is :',regr.score(X_test, y_test))
-
-
-#Trying Linear Regression score
-reg_all = LinearRegression()
-reg_all.fit(X_train, y_train)
-y_pred = reg_all.predict(X_test)
-print("Linear Regression score is :",reg_all.score(X_test, y_test))
-
-# Hyper-parameter tuning for Linear Regression
-# Setup the parameters and distributions to sample from: param_dist
-param_dist = {"fit_intercept": [True, False],
-              "normalize": [True, False],
-              "copy_X": [True, False],
-              "n_jobs": [1,3,5],
-              "positive": [True, False]
-              }
-logreg_cv = GridSearchCV(reg_all, param_dist, cv=None)
-
-# Fit it to the data
-logreg_cv.fit(X_train,y_train)
-
-# Print the tuned parameters and score
-print("Best Parameters for Linear Regression: ",logreg_cv.best_params_)
-print("Best Score for Linear Regression: ",logreg_cv.best_score_)
-
-# print(confusion_matrix(y_test, y_pred))
-# print(classification_report(y_test, y_pred))
-
-print('-------------------------End: Answer 5  -------------------------------------------------------------------------')
-
-
-
-# print('----------------------------------City Counts--------------------------------------------')
-# City1 = []
-# values, counts = np.unique(City, return_counts=True)
-# City1.append([values, counts])
-# df_City = pd.merge(values, counts)
-# df_City.info
-# print(df_City.head())
-
-#df_City = pd.DataFrame(City1, columns=['values','counts'])
-
-# City.value_counts()[:20].plot(kind='barh')
-# print(pd.values_count(df_City.values.flatten()))
-
-#Visual_City = City.value_counts()
-# A graph to show count of Companies in S&P500 and their cities
-# df_SecByDate = df_Securities.groupby(['City'],as_index= False)
-# print(df_SecByDate.dtypes)
-
-
-#-----------------------------------------------------------------------------------------
-
-
 
 # Find the count of Ticker Symbol in Securities data
 #print(df_Securities['Ticker symbol'].value_counts())
@@ -424,3 +395,16 @@ print('-------------------------End: Answer 5  ---------------------------------
 
 
 #As you've come to appreciate, there are many steps to building a model, from creating training and test sets, to fitting a classifier or regressor, to tuning its parameters, to evaluating its performance on new data. Imputation can be seen as the first step of this machine learning process, the entirety of which can be viewed within the context of a pipeline. Scikit-learn provides a pipeline constructor that allows you to piece together these steps into one process and thereby simplify your workflow.
+
+
+# As machine Algo works only on Numerical data then converting Data which is in string format to float and droping Symbol as the same is a redundent column
+
+# ##try:
+#     df_Prices_AAPL['date'] = pd.to_datetime(df_Prices_AAPL['date'], format='%d-%m-%Y')
+# except Exception as e:
+#     df_Prices_AAPL['date'] = pd.to_datetime(df_Prices_AAPL['date'], format='%Y-%m-%d')
+# print(df_Prices_AAPL.dtypes)
+
+# df_Prices_AAPL['date'] = int(df_Prices_AAPL['date'].strftime())
+# df_Prices_AAPL['date'] = df_Prices_AAPL['date'].astype(float)
+# df_Prices_AAPL['date'].apply(lambda x: float(x))
